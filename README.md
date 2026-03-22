@@ -1,39 +1,29 @@
-🌩️ Serverless Feedback
+🌩️ Serverless Feedback App
+A fully serverless feedback submission app built on AWS. Users submit feedback through a clean web form — data is processed by Lambda and stored in DynamoDB, with no server required.
+🔗 Live Demo
+Frontend: https://d3jd94tvt098le.cloudfront.net
 
-A serverless feedback submission app built using AWS Lambda, API Gateway, DynamoDB, S3, and CloudFront.
-This project allows users to submit feedback through a clean, elegant web form — automatically stored in DynamoDB through an API built with Lambda.
+🏗️ Architecture
+[Frontend: S3 + CloudFront]
+        ↓
+[Amazon API Gateway - POST /feedback]
+        ↓
+[AWS Lambda - submitFeedback (Python)]
+        ↓
+[Amazon DynamoDB - feedback table]
 
 🚀 Features
 
-🗂️ Static Frontend hosted on Amazon S3 + distributed globally with CloudFront
-⚙️ API Gateway endpoint for handling feedback submissions
-🧠 AWS Lambda function that processes incoming feedback and saves to DynamoDB
-🪣 DynamoDB table (feedback) to persist user feedback
-🌍 Fully serverless, scalable, and cost-efficient
-💌 (Optional) Email notifications using Amazon SES
-
-🧠 Architecture Overview
-[Frontend (HTML/CSS/JS)] 
-       │
-       ▼
-[Amazon API Gateway]  --->  [AWS Lambda: submitFeedback]
-       │
-       ▼
-[Amazon DynamoDB: feedback table]
+Static frontend hosted on Amazon S3 and distributed globally via CloudFront
+HTTPS enabled automatically through CloudFront
+API Gateway endpoint handles form submissions
+AWS Lambda (Python) processes and stores feedback
+DynamoDB persists every submission with a unique UUID
+Fully serverless — no EC2, no servers, near-zero cost
 
 
-Optional future integrations:
-
-✅ Email notifications (via Amazon SES or EmailJS)
-✅ Admin dashboard for viewing feedback
-
-🧩 AWS Resources Used
-Service	Purpose
-S3	Hosts the static frontend website
-CloudFront	Provides CDN distribution and HTTPS security
-API Gateway	Acts as the public API endpoint
-Lambda	Handles backend logic (Python)
-DynamoDB	Stores feedback records
+🧩 AWS Services Used
+ServicePurposeS3Hosts the static frontendCloudFrontCDN distribution + HTTPSAPI GatewayPublic HTTP endpoint (POST /feedback)LambdaBackend logic (Python)DynamoDBNoSQL database for storing feedback
 
 🛠️ Tech Stack
 
@@ -42,8 +32,9 @@ Backend: Python (AWS Lambda)
 Database: DynamoDB
 Infrastructure: AWS S3, CloudFront, API Gateway
 
-⚙️ Lambda Code (submit_feedback.py)
-import json
+
+⚙️ Lambda Function
+pythonimport json
 import boto3
 import uuid
 
@@ -79,30 +70,30 @@ def lambda_handler(event, context):
             'body': json.dumps({'error': str(e)})
         }
 
-💻 Live Demo
+🔄 How to Redeploy
 
-Frontend (CloudFront URL):
-🔗 https://d3vi5nrbca9hr.cloudfront.net/
+DynamoDB — Create a table named feedback with partition key ID (String)
+Lambda — Create a Python 3.12 function, paste the code above, set handler to lambda_function.lambda_handler, attach AmazonDynamoDBFullAccess policy
+API Gateway — Create an HTTP API with a POST route at /feedback pointing to your Lambda function
+S3 — Create a bucket, enable static website hosting, upload index.html
+CloudFront — Create a distribution pointing to S3, set default root object to index.html, disable WAF
 
-API Endpoint (API Gateway):
-🔗 https://zm3yo319r2.execute-api.us-east-1.amazonaws.com
+
+⚠️ Important: Do NOT enable WAF or AWS Shield — these incur charges even at low traffic. For portfolio projects they are unnecessary.
 
 
-🧩 Challenges Faced
+🧠 Lessons Learned
 
-❌ “Not Found” error — fixed by creating the correct /feedback route in API Gateway.
-⚠️ Case sensitivity in DynamoDB (ID vs id) caused write errors — fixed by matching key name.
-🔄 Fixed CORS issues by enabling headers and redeploying API Gateway.
-📁 CloudFront “NoSuchKey” error — caused by wrong S3 file path.
-📬 Future Improvements
-💌 Add email confirmation using Amazon SES.
-📊 Create a simple admin dashboard to view stored feedback.
-☁️ Deploy infrastructure automatically using Terraform or AWS CDK.
+Runtime mismatch — accidentally set Lambda runtime to Node.js instead of Python, causing ImportModuleError. Always verify runtime matches your code language.
+Handler configuration — handler must match filename and function: lambda_function.lambda_handler
+File naming — S3 default root object must exactly match the uploaded filename (index.html)
+WAF costs — WAF enabled by default on some CloudFront plans. Always explicitly disable it for portfolio/personal projects.
+CORS — API Gateway requires Access-Control-Allow-Origin: * in Lambda response headers for browser requests to work
 
-📘 Author
 
-James Ogbodu
-💼 AWS Cloud Enthusiast | Serverless Developer | Building Scalable Cloud Projects
+📌 Author
+James Ogbodu — AWS Cloud Engineer
 
-🪪 License
-This project is licensed under the MIT License
+🌐 Portfolio
+💼 LinkedIn
+🐙 GitHub
