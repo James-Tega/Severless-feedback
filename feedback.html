@@ -66,9 +66,14 @@
         button:active { transform: scale(0.98); }
         button:disabled { background: #4b5563; color: #9ca3af; cursor: not-allowed; }
 
-        .message { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 14px; text-align: center; display: none; }
-        .message.success { background: rgba(0,212,100,0.1); border: 1px solid rgba(0,212,100,0.3); color: #00d464; display: block; }
-        .message.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; display: block; }
+        .message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
 
         .powered { text-align: center; margin-top: 24px; color: #374151; font-size: 12px; }
         .powered span { color: #ff9900; }
@@ -79,7 +84,7 @@
         <h1>Leave Feedback 💬</h1>
         <p class="subtitle">Your feedback is stored securely in AWS DynamoDB via Lambda.</p>
 
-        <form id="feedbackForm">
+        <form id="feedbackForm" onsubmit="return false;">
             <label>Your Name</label>
             <input type="text" id="name" placeholder="James Ogbodu" required>
 
@@ -89,7 +94,7 @@
             <label>Message</label>
             <textarea id="message" placeholder="Write your feedback here..." required></textarea>
 
-            <button type="submit" id="submitBtn">Send Feedback</button>
+            <button type="button" id="submitBtn" onclick="submitFeedback()">Send Feedback</button>
         </form>
 
         <div class="message" id="responseMsg"></div>
@@ -98,10 +103,8 @@
     </div>
 
     <script>
-        const API_URL = 'https://c5r3phgsr8.execute-api.us-east-1.amazonaws.com/feedback';
-
-        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        async function submitFeedback() {
+            const API_URL = 'https://c5r3phgsr8.execute-api.us-east-1.amazonaws.com/feedback';
 
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -109,36 +112,53 @@
             const btn = document.getElementById('submitBtn');
             const msg = document.getElementById('responseMsg');
 
+            if (!name || !email || !message) {
+                msg.textContent = '⚠️ Please fill in all fields.';
+                msg.style.display = 'block';
+                msg.style.background = 'rgba(245,158,11,0.1)';
+                msg.style.border = '1px solid rgba(245,158,11,0.3)';
+                msg.style.color = '#f59e0b';
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            msg.className = 'message';
             msg.style.display = 'none';
 
             try {
-                const res = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, message })
                 });
 
-                const data = await res.json();
+                msg.textContent = '✅ Feedback submitted successfully!';
+                msg.style.display = 'block';
+                msg.style.background = 'rgba(0,212,100,0.1)';
+                msg.style.border = '1px solid rgba(0,212,100,0.3)';
+                msg.style.color = '#00d464';
+                msg.style.padding = '12px 16px';
+                msg.style.borderRadius = '8px';
+                msg.style.marginTop = '16px';
 
-                if (res.status === 200) {
-                    msg.textContent = '✅ Feedback submitted successfully!';
-                    msg.className = 'message success';
-                    document.getElementById('feedbackForm').reset();
-                } else {
-                    msg.textContent = '❌ Something went wrong. Please try again.';
-                    msg.className = 'message error';
-                }
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('message').value = '';
+
             } catch (err) {
                 msg.textContent = '❌ Network error. Please check your connection.';
-                msg.className = 'message error';
+                msg.style.display = 'block';
+                msg.style.background = 'rgba(239,68,68,0.1)';
+                msg.style.border = '1px solid rgba(239,68,68,0.3)';
+                msg.style.color = '#ef4444';
+                msg.style.padding = '12px 16px';
+                msg.style.borderRadius = '8px';
+                msg.style.marginTop = '16px';
             }
 
             btn.disabled = false;
             btn.textContent = 'Send Feedback';
-        });
+        }
     </script>
 </body>
 </html>
